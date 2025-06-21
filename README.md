@@ -38,6 +38,8 @@ h_date = HijriDate(1445, 10, 1)
 gregorian = converter.to_gregorian(h_date)
 print(gregorian.date())  # Output: 2024-04-10
 
+```
+
 ## 🙏 Acknowledgments
 
 - **Umm al-Qura Calendar Data**: This package uses official Hijri-Gregorian mapping data published by the Saudi government for the Umm al-Qura calendar.
