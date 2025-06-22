@@ -1,5 +1,6 @@
 import csv
 from datetime import datetime, timedelta
+import importlib.resources
 
 HIJRI_MONTHS = [
     "", "Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani", "Jumada al-Awwal", "Jumada al-Thani",
@@ -11,7 +12,7 @@ class HijriDate:
         if not (1 <= month <= 12):
             raise ValueError("Hijri month must be between 1 and 12")
         if not (1 <= day <= 30):
-            raise ValueError("Hijri day must be between 1 and 30 (approximate)")
+            raise ValueError("Hijri day must be between 1 and 30")
 
         self.year = year
         self.month = month
@@ -31,11 +32,11 @@ class HijriDate:
             self.day == other.day
         )
 
-
 class AccurateHijriConverter:
-    def __init__(self, csv_path):
+    def __init__(self):
         self.hijri_data = []
-        with open(csv_path, newline='') as file:
+
+        with importlib.resources.files("accurate_hijri.data").joinpath("umm_al_qura.csv").open("r", encoding="utf-8") as file:
             reader = csv.DictReader(file)
             for row in reader:
                 gy = int(row["gy"])
@@ -51,10 +52,6 @@ class AccurateHijriConverter:
                 })
 
     def to_hijri(self, gregorian_date):
-        """
-        Convert a Gregorian date (datetime) to HijriDate.
-        Assumes Hijri months are ~30 days long.
-        """
         for row in reversed(self.hijri_data):
             if gregorian_date >= row["gregorian_start"]:
                 delta = (gregorian_date - row["gregorian_start"]).days
@@ -62,6 +59,7 @@ class AccurateHijriConverter:
                 month = row["hijri_month"]
                 year = row["hijri_year"]
 
+                # Rough handling for overflow (basic assumption: 30 days/month)
                 while day > 30:
                     day -= 30
                     month += 1
@@ -71,13 +69,9 @@ class AccurateHijriConverter:
 
                 return HijriDate(year, month, day)
 
-        raise ValueError("Gregorian date is out of the supported range")
+        raise ValueError("Date out of supported range")
 
     def to_gregorian(self, hijri_date):
-        """
-        Convert a HijriDate to Gregorian datetime.
-        Assumes Hijri months are ~30 days long.
-        """
         for row in self.hijri_data:
             if (row["hijri_year"] == hijri_date.year and
                 row["hijri_month"] == hijri_date.month and
@@ -86,4 +80,4 @@ class AccurateHijriConverter:
                 delta_days = hijri_date.day - 1
                 return row["gregorian_start"] + timedelta(days=delta_days)
 
-        raise ValueError("Hijri date not found in dataset or out of supported range")
+        raise ValueError("Hijri date not found in dataset or out of range")

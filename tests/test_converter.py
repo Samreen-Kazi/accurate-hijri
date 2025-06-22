@@ -1,9 +1,9 @@
 import pytest
-from accurate_hijri.converter import AccurateHijriConverter, HijriDate
+from accurate_hijri import AccurateHijriConverter, HijriDate
 from datetime import datetime
 
-# Load once per module
-converter = AccurateHijriConverter("accurate_hijri/data/umm_al_qura.csv")
+# Initialize converter without CSV path
+converter = AccurateHijriConverter()
 
 def test_round_trip_conversion():
     g_date = datetime(2024, 4, 10)
@@ -37,11 +37,10 @@ def test_invalid_hijri_day():
         HijriDate(1445, 10, 35)
 
 def test_out_of_range_gregorian():
-    with pytest.raises(ValueError, match="Gregorian date is out of the supported range"):
+    with pytest.raises(ValueError, match="Date out of supported range"):
         converter.to_hijri(datetime(1800, 1, 1))
 
 def test_missing_hijri_date():
-    # Definitely out of range in Umm al-Qura
     fake_hijri = HijriDate(1600, 1, 1)
-    with pytest.raises(ValueError, match="Hijri date not found in dataset"):
+    with pytest.raises(ValueError, match="Hijri date not found in dataset or out of range"):
         converter.to_gregorian(fake_hijri)
